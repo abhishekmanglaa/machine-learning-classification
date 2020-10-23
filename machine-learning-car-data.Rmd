@@ -1,0 +1,105 @@
+---
+title: "Car Sales Prediction"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(Metrics)
+
+#Loading the dataset
+carDF <- read.csv("Data/car_data.csv", header = TRUE)
+carDF$IsBadBuy <- as.factor(carDF$IsBadBuy)
+
+#Confusion Matrix Calculation
+confusion_matrix <- function(preds, actuals, cutoff){
+  
+  classifications <- ifelse(preds>cutoff,1,0)
+  
+  ##careful with positives and negatives here!
+  confusion_matrix <- table(actuals,classifications)
+}
+
+
+class_performance <- function(confusion_matrix){
+
+  TP <- confusion_matrix[2,2]
+  TN <- confusion_matrix[1,1]
+  FP <- confusion_matrix[1,2]
+  FN <- confusion_matrix[2,1]
+  
+  ##accuracy = total number of correct classifications/total number of classifications
+  acc <- (TP+TN)/(TP+TN+FP+FN)
+  
+  ##TPR = Percent of actual positives identified as such (sensitivity)
+  tpr <- TP/(TP+FN)
+  
+  ##TNR = Percent of actual negatives identified as such (specificity)
+  tnr <- TN/(TN+FP)
+  
+  ##I'll leave it as an exercise for you to compute the other basic confusion matrix metrics
+  
+  ##return the list of metrics you want
+  return(c(acc, tpr, tnr))
+}
+
+```
+
+## Part 1: Data Preparation 
+
+1) Setting the seed and partitioning the data. The proportion of observations in the training data set should be 70%. The remaining 30% of observations should be in the test data set. 
+
+```{r}
+
+#Setting the seed
+set.seed(71923)
+
+#Train Test Split
+train_insts = sample(nrow(carDF), .7*nrow(carDF))
+carDFTrain <- carDF[train_insts,]
+carDFTest <- carDF[-train_insts,]
+
+```
+
+## Part 2: Exploratory Data Analysis
+
+1) Boxplots of VehOdo and VehicleAge (broken up by values of IsBadBuy).
+
+```{r}
+#Plotting the box plots
+ggplot(carDFTrain, aes( x = IsBadBuy, y = VehOdo)) + geom_boxplot()
+ggplot(carDFTrain, aes(x = IsBadBuy, y = VehicleAge)) + geom_boxplot()
+```
+
+We can see that bad buys have a higher vehicle age.
+
+2) Report a two-way table for count of IsBadBuy broken up by Make (i.e. what are the numbers of each make of cars that are good vs. bad buys?)
+
+```{r}
+
+#Two-way table 
+table(carDFTrain$Make, carDFTrain$IsBadBuy)
+
+```
+
+For Ford vehicles bad buys are really high than good buys. But we are not really controlling for other variables hence cannot make a concrete argument here.
+
+## Part 3: Logistic Regression
+
+1) Training a logistic regression model of IsBadBuy on the demographic variables using the training data set. 
+
+```{r}
+#Logistic Regression
+RegressionPart4 <- glm(IsBadBuy ~ Auction + VehicleAge + Make +Color + 
+                        WheelType + VehOdo + Size + MMRAcquisitionAuctionAveragePrice + 
+                        MMRAcquisitionRetailAveragePrice, data = carDFTrain, family = "binomial")
+summary(RegressionPart4)
+ConfusionMatrixTwo <- confusion_matrix(preds = predict(RegressionPart4, carDFTest, type = "response"), actuals = carDFTest$IsBadBuy, cutoff = .5)
+ConfusionMatrixTwo
+```
+
+
+
+
+
+
