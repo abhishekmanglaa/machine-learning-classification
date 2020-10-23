@@ -1,6 +1,6 @@
 # Predictions With Logistic Regression
 
-Predicting if a sale in going to go bad.
+Predicting if a car sale in going to go bad.
 
 ## Check out the md file.
 
